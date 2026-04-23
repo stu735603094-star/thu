@@ -7,20 +7,15 @@
         body { font-family: 'Segoe UI', Tahoma, sans-serif; text-align: center; background: #f0f4f8; margin: 0; }
         .header { background: #003366; color: white; padding: 15px; border-bottom: 5px solid #ff9800; }
         .map-box { position: relative; width: 95%; max-width: 1000px; margin: 15px auto; background: white; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden; line-height: 0; }
-        
-        /* Chồng các lớp ảnh */
         .map-layers img { width: 100%; display: none; pointer-events: none; }
         .map-layers img.active { display: block; }
-        
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; cursor: crosshair; touch-action: none; }
-        
         .controls { margin: 15px; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
-        button { padding: 10px 15px; cursor: pointer; border-radius: 20px; border: 1px solid #003366; font-weight: bold; background: white; transition: 0.2s; }
+        button { padding: 10px 15px; cursor: pointer; border-radius: 20px; border: 1px solid #003366; font-weight: bold; background: white; }
         button.active { background: #003366; color: white; }
         .btn-check { background: #28a745; color: white; border: none; }
         .btn-clear { background: #dc3545; color: white; border: none; }
-        
-        #result-msg { margin: 20px; padding: 15px; border-radius: 10px; display: none; font-size: 1.1em; font-weight: bold; max-width: 800px; margin-left: auto; margin-right: auto; }
+        #result-msg { margin: 20px; padding: 20px; border-radius: 10px; display: none; font-size: 1.2em; font-weight: bold; max-width: 850px; margin: 10px auto; line-height: 1.5; }
         .success { background: #d4edda; color: #155724; border: 2px solid #c3e6cb; display: block !important; }
         .fail { background: #f8d7da; color: #721c24; border: 2px solid #f5c6cb; display: block !important; }
     </style>
@@ -28,16 +23,16 @@
 <body>
 
 <div class="header">
-    <h2>BÀI TẬP: THIẾT KẾ ĐƯỜNG THOÁT LŨ TẠI PHÚ HÒA</h2>
-    <p>Điểm đến an toàn: Chùa Hương Sơn (biểu tượng 🔴) hoặc Trạm y tế xã Hòa Kiến (biểu tượng ✚)</p>
+    <h2>THỰC HÀNH: XÁC ĐỊNH TUYẾN ĐƯỜNG THOÁT NẠN</h2>
+    <p>Nhiệm vụ: Dựa vào cấp độ ngập, hãy vẽ đường đến nơi an toàn (Trường THPT Trần Suyền hoặc các điểm cao)</p>
 </div>
 
 <div class="controls">
     <button onclick="setLayer('GTHONG', this)" class="active">Giao thông</button>
-    <button onclick="setLayer('MOHINHSODOCAO', this)">Độ cao địa hình</button>
-    <button onclick="setLayer('CAP1', this)">Báo động 1</button>
-    <button onclick="setLayer('CAP2', this)">Báo động 2</button>
-    <button onclick="setLayer('CAP3', this)">Báo động 3</button>
+    <button onclick="setLayer('MOHINHSODOCAO', this)">Địa hình</button>
+    <button onclick="setLayer('CAP1', this)">Cấp 1</button>
+    <button onclick="setLayer('CAP2', this)">Cấp 2</button>
+    <button onclick="setLayer('CAP3', this)">Cấp 3</button>
     <button class="btn-clear" onclick="clearCanvas()">🧹 Xóa đường vẽ</button>
     <button class="btn-check" onclick="checkResult()">✅ KIỂM TRA ĐÚNG/SAI</button>
 </div>
@@ -61,6 +56,7 @@
     const container = document.getElementById('container');
     let drawing = false;
     let endX, endY;
+    let currentLevel = 'GTHONG';
 
     function resize() {
         const activeImg = document.querySelector('.map-layers img.active');
@@ -72,49 +68,37 @@
     window.onresize = resize;
 
     function setLayer(id, btn) {
+        currentLevel = id;
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
+        tempCanvas.getContext('2d').drawImage(canvas, 0, 0);
+
         document.querySelectorAll('.map-layers img').forEach(img => img.classList.remove('active'));
         document.getElementById('img-' + id).classList.add('active');
         document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         
-        // Lưu lại nét vẽ khi đổi lớp
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = canvas.width;
-        tempCanvas.height = canvas.height;
-        tempCanvas.getContext('2d').drawImage(canvas, 0, 0);
-        
         resize();
         ctx.drawImage(tempCanvas, 0, 0, canvas.width, canvas.height);
     }
 
-    // Xử lý vẽ cảm ứng và chuột
     function getPos(e) {
         const rect = canvas.getBoundingClientRect();
         const clientX = e.clientX || (e.touches && e.touches[0].clientX);
         const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-        return {
-            x: clientX - rect.left,
-            y: clientY - rect.top
-        };
+        return { x: clientX - rect.left, y: clientY - rect.top };
     }
 
-    function startDraw(e) { drawing = true; ctx.beginPath(); draw(e); }
-    function stopDraw() { drawing = false; }
-    function draw(e) {
+    canvas.addEventListener('mousedown', (e) => { drawing = true; ctx.beginPath(); });
+    canvas.addEventListener('mousemove', (e) => {
         if (!drawing) return;
         const pos = getPos(e);
         ctx.lineWidth = 4; ctx.strokeStyle = '#e91e63'; ctx.lineCap = 'round';
         ctx.lineTo(pos.x, pos.y); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(pos.x, pos.y);
         endX = pos.x; endY = pos.y;
-    }
-
-    canvas.addEventListener('mousedown', startDraw);
-    canvas.addEventListener('mousemove', draw);
-    window.addEventListener('mouseup', stopDraw);
-    canvas.addEventListener('touchstart', startDraw);
-    canvas.addEventListener('touchmove', draw);
-    canvas.addEventListener('touchend', stopDraw);
+    });
+    window.addEventListener('mouseup', () => drawing = false);
 
     function clearCanvas() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -124,23 +108,32 @@
 
     function checkResult() {
         const msg = document.getElementById('result-msg');
-        if (!endX) { alert("Em hãy vẽ đường đi từ trường THPT Trần Suyền đến đích trước nhé!"); return; }
+        if (!endX) { alert("Em hãy thực hiện vẽ tuyến đường trước!"); return; }
 
         const pX = endX / canvas.width;
         const pY = endY / canvas.height;
 
-        // Tọa độ dựa trên vị trí biểu tượng trên bản đồ của bạn
-        // Chùa Hương Sơn (Khoảng giữa bên trái)
-        const isChuaHS = (pX > 0.25 && pX < 0.35 && pY > 0.15 && pY < 0.25);
-        // Trạm y tế xã Hòa Kiến (Phía trên chính giữa)
-        const isTramYT = (pX > 0.35 && pX < 0.45 && pY > 0.1 && pY < 0.2);
+        // TỌA ĐỘ TRƯỜNG THPT TRẦN SUYỀN (Vùng trung tâm)
+        const isTranSuyen = (pX > 0.35 && pX < 0.45 && pY > 0.35 && pY < 0.48);
+        
+        // CÁC VÙNG CAO PHÍA TRÊN (Dành cho cấp 1)
+        const isVungCaoPhiaBac = (pY < 0.3);
 
-        if (isChuaHS || isTramYT) {
-            let dich = isChuaHS ? "Chùa Hương Sơn" : "Trạm y tế xã Hòa Kiến";
-            msg.innerHTML = "✅ XUẤT SẮC! Em đã chọn đúng lộ trình an toàn đến " + dich + ". Đây là khu vực cao, không bị ngập ở cấp độ 3.";
+        let isCorrect = false;
+
+        if (currentLevel === 'CAP1') {
+            // Cấp 1: Về trường hoặc đến các vùng cao phía trên đều đúng
+            if (isTranSuyen || isVungCaoPhiaBac) isCorrect = true;
+        } else {
+            // Cấp 2, 3: Chỉ những nơi cực kỳ cao (như trường hoặc điểm cao nhất) mới đúng
+            if (isTranSuyen) isCorrect = true;
+        }
+
+        if (isCorrect) {
+            msg.innerHTML = "🎉 Chúc mừng em, em đã tìm được đúng tuyến đường thoát nạn!";
             msg.className = "success";
         } else {
-            msg.innerHTML = "❌ CHƯA CHÍNH XÁC: Điểm đến này vẫn nằm trong vùng nguy cơ ngập cao hoặc chưa phải trạm cứu hộ an toàn nhất. Em hãy quan sát kỹ lớp 'Độ cao địa hình' và 'Báo động 3' để chọn lại nhé!";
+            msg.innerHTML = "⚠️ Tuyến đường này có vẻ nước đang lên không thể di chuyển được, em hãy xác định lại nhé.";
             msg.className = "fail";
         }
         msg.style.display = "block";
