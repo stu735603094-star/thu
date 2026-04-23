@@ -6,20 +6,24 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; text-align: center; background: #f0f4f8; margin: 0; padding-bottom: 50px; }
-        .header { background: #003366; color: white; padding: 15px; border-bottom: 5px solid #ff9800; }
-        .map-box { position: relative; width: 95%; max-width: 1000px; margin: 15px auto; background: white; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden; line-height: 0; }
+        .header { background: #003366; color: white; padding: 20px; border-bottom: 5px solid #ff9800; }
+        h2 { margin: 0; font-size: 1.8em; }
+        
+        .map-box { position: relative; width: 95%; max-width: 1000px; margin: 20px auto; background: white; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden; line-height: 0; }
         .map-layers img { width: 100%; display: none; pointer-events: none; }
         .map-layers img.active { display: block; }
-        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; cursor: crosshair; touch-action: none; }
-        .controls { margin: 15px; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
         
-        button { padding: 10px 15px; cursor: pointer; border-radius: 20px; border: 1px solid #003366; font-weight: bold; background: white; }
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; cursor: crosshair; touch-action: none; }
+        
+        .controls { margin: 15px; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+        button { padding: 12px 18px; cursor: pointer; border-radius: 25px; border: 1px solid #003366; font-weight: bold; background: white; transition: 0.3s; }
         button.active { background: #003366; color: white; }
-        .btn-check { background: #28a745; color: white; border: none; }
-        .btn-clear { background: #dc3545; color: white; border: none; }
-        .btn-download { background: #007bff; color: white; border: none; } /* Nút nộp bài */
+        
+        .btn-check { background: #28a745 !important; color: white !important; border: none; }
+        .btn-clear { background: #dc3545 !important; color: white !important; border: none; }
+        .btn-download { background: #007bff !important; color: white !important; border: none; }
 
-        #result-msg { margin: 20px; padding: 20px; border-radius: 10px; display: none; font-size: 1.2em; font-weight: bold; max-width: 850px; margin: 10px auto; }
+        #result-msg { margin: 15px auto; padding: 15px; border-radius: 10px; display: none; font-size: 1.2em; font-weight: bold; max-width: 900px; line-height: 1.6; }
         .success { background: #d4edda; color: #155724; border: 2px solid #c3e6cb; display: block !important; }
         .fail { background: #f8d7da; color: #721c24; border: 2px solid #f5c6cb; display: block !important; }
     </style>
@@ -27,28 +31,28 @@
 <body>
 
 <div class="header">
-    <h2>THỰC HÀNH: THIẾT KẾ TUYẾN ĐƯỜNG THOÁT NẠN</h2>
-    <p>Sau khi máy báo "Chúc mừng", em hãy nhấn <b>NỘP BÀI</b> để gửi kết quả cho thầy/cô.</p>
+    <h2>THỰC HÀNH: XÁC ĐỊNH TUYẾN ĐƯỜNG THOÁT NẠN AN TOÀN</h2>
+    <p>Nhiệm vụ: Vẽ đường đi từ khu vực nguy hiểm về <b>Trường THPT Trần Suyền (🚩)</b></p>
 </div>
 
 <div class="controls">
     <button onclick="setLayer('GTHONG', this)" class="active">Giao thông</button>
-    <button onclick="setLayer('MOHINHSODOCAO', this)">Địa hình</button>
+    <button onclick="setLayer('MOHINHSODOCAO', this)">Độ cao địa hình</button>
     <button onclick="setLayer('CAP1', this)">Cấp 1</button>
     <button onclick="setLayer('CAP2', this)">Cấp 2</button>
     <button onclick="setLayer('CAP3', this)">Cấp 3</button>
-    <button class="btn-clear" onclick="clearCanvas()">🧹 Xóa vẽ</button>
-    <button class="btn-check" onclick="checkResult()">✅ KIỂM TRA</button>
+    <button class="btn-clear" onclick="clearCanvas()">🧹 Xóa đường vẽ</button>
+    <button class="btn-check" onclick="checkResult()">✅ KIỂM TRA ĐÚNG/SAI</button>
     <button class="btn-download" onclick="nopBai()">💾 NỘP BÀI (Lưu ảnh)</button>
 </div>
 
 <div class="map-box" id="capture-area">
     <div class="map-layers">
-        <img src="GTHONG.png" id="img-GTHONG" class="active" crossorigin="anonymous">
-        <img src="MOHINHSODOCAO.png" id="img-MOHINHSODOCAO" crossorigin="anonymous">
-        <img src="CAP1.png" id="img-CAP1" crossorigin="anonymous">
-        <img src="CAP2.png" id="img-CAP2" crossorigin="anonymous">
-        <img src="CAP3.png" id="img-CAP3" crossorigin="anonymous">
+        <img src="GTHONG.png" id="img-GTHONG" class="active">
+        <img src="MOHINHSODOCAO.png" id="img-MOHINHSODOCAO">
+        <img src="CAP1.png" id="img-CAP1">
+        <img src="CAP2.png" id="img-CAP2">
+        <img src="CAP3.png" id="img-CAP3">
     </div>
     <canvas id="canvas"></canvas>
 </div>
@@ -69,32 +73,52 @@
         canvas.height = activeImg.offsetHeight;
     }
     
-    window.onload = () => setTimeout(resize, 500);
+    window.onload = () => setTimeout(resize, 600);
+    window.onresize = resize;
 
     function setLayer(id, btn) {
         currentLevel = id;
-        const temp = ctx.getImageData(0,0, canvas.width, canvas.height);
+        // Lưu lại nét vẽ trước khi đổi lớp
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        tempCanvas.getContext('2d').drawImage(canvas, 0, 0);
+
         document.querySelectorAll('.map-layers img').forEach(img => img.classList.remove('active'));
         document.getElementById('img-' + id).classList.add('active');
         document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
+        
         resize();
-        ctx.putImageData(temp, 0, 0);
+        ctx.drawImage(tempCanvas, 0, 0); // Vẽ lại nét vẽ
     }
 
-    // Logic vẽ
-    canvas.addEventListener('mousedown', () => { drawing = true; ctx.beginPath(); });
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        return { x: clientX - rect.left, y: clientY - rect.top };
+    }
+
+    canvas.addEventListener('mousedown', (e) => { drawing = true; ctx.beginPath(); });
     canvas.addEventListener('mousemove', (e) => {
         if (!drawing) return;
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        ctx.lineWidth = 4; ctx.strokeStyle = 'red'; ctx.lineCap = 'round';
-        ctx.lineTo(x, y); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(x, y);
-        endX = x; endY = y;
+        const pos = getPos(e);
+        ctx.lineWidth = 4; ctx.strokeStyle = '#e91e63'; ctx.lineCap = 'round';
+        ctx.lineTo(pos.x, pos.y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(pos.x, pos.y);
+        endX = pos.x; endY = pos.y;
     });
     window.addEventListener('mouseup', () => drawing = false);
+    
+    canvas.addEventListener('touchstart', (e) => { drawing = true; ctx.beginPath(); });
+    canvas.addEventListener('touchmove', (e) => {
+        if (!drawing) return;
+        const pos = getPos(e);
+        ctx.lineTo(pos.x, pos.y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(pos.x, pos.y);
+        endX = pos.x; endY = pos.y;
+    });
 
     function clearCanvas() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -104,16 +128,17 @@
 
     function checkResult() {
         const msg = document.getElementById('result-msg');
-        if (!endX) { alert("Em chưa vẽ đường đi!"); return; }
+        if (!endX) { alert("Học sinh cần vẽ đường đi trước!"); return; }
+
         const pX = endX / canvas.width;
         const pY = endY / canvas.height;
 
-        const isTranSuyen = (pX > 0.35 && pX < 0.45 && pY > 0.35 && pY < 0.48);
-        const isVungCao = (pY < 0.3);
+        // TỌA ĐỘ TRƯỜNG THPT TRẦN SUYỀN (🚩)
+        // pX: 0.38 - 0.42 (khoảng 40% từ trái sang)
+        // pY: 0.38 - 0.45 (khoảng 40% từ trên xuống)
+        const isTranSuyen = (pX > 0.37 && pX < 0.43 && pY > 0.37 && pY < 0.46);
 
-        let correct = (currentLevel === 'CAP1') ? (isTranSuyen || isVungCao) : isTranSuyen;
-
-        if (correct) {
+        if (isTranSuyen) {
             msg.innerHTML = "🎉 Chúc mừng em, em đã tìm được đúng tuyến đường thoát nạn!";
             msg.className = "success";
         } else {
@@ -123,14 +148,17 @@
         msg.style.display = "block";
     }
 
-    // HÀM DÀNH CHO GIÁO VIÊN: Tải ảnh bài làm
     function nopBai() {
-        html2canvas(document.getElementById('capture-area')).then(canvasResult => {
+        // Sử dụng html2canvas để chụp khu vực bản đồ + nét vẽ
+        html2canvas(document.getElementById('capture-area'), {
+            useCORS: true, 
+            allowTaint: true
+        }).then(canvasResult => {
             const link = document.createElement('a');
-            link.download = 'BaiLam_ThoatNan_' + new Date().toLocaleTimeString() + '.png';
-            link.href = canvasResult.toDataURL();
+            link.download = 'BaiLam_ThoatNan_PhuHoa.png';
+            link.href = canvasResult.toDataURL("image/png");
             link.click();
-            alert("Đã tải ảnh bài làm về máy! Em hãy gửi file này cho thầy/cô nhé.");
+            alert("Ảnh bài làm đã được lưu về máy. Em hãy gửi ảnh này cho thầy/cô nhé!");
         });
     }
 </script>
